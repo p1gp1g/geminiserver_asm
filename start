@@ -1,0 +1,9 @@
+#!/bin/sh
+
+trap "exit" INT TERM
+trap "kill 0" EXIT
+
+chroot --userspec=nobody:nobody server_root /server &
+sudo -u nobody socat ssl-l:1965,cert=cert,fork,reuseaddr,verify=0 tcp:localhost:8888 &
+echo "^C to quit."
+cat >/dev/null
