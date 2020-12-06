@@ -2,7 +2,7 @@
 
 It is a verify simple gemini server written in x64 asm.
 
-It doesn't handle TLS, therefor we'll delegate this to openssl and socat. Therefore, you'll need to install socat. Pages are limited to 1024 bytes but it can be increased easily. The code is not optimized at all.
+It doesn't handle TLS: we'll delegate this to openssl and socat. Therefore, you'll need to install socat. Pages are limited to 1024 bytes but it can be increased easily. The code is not optimized at all.
 
 Requirements:
 * socat
@@ -21,7 +21,8 @@ echo "30 gemini://{YourDomain}/files/index" | wc -c
 ```
 
 ```
-./compile.sh		# compile
+nasm -f elf64 server.asm		# compile
+ld -o server server.o
 mkdir -p server_root/files		# create a directory to uploads your files
 echo "# Index" > server_root/files/index # Redirections go to this file
 cp server server_root/		# upload the compiled binary
