@@ -77,7 +77,7 @@ exit:
 
 client:
 init_ok:
-	mov rdx, [len_success]
+	mov rdx, len_success
 	mov rdi, buffer_resp
 	mov rsi, str_success
 init_ok_loop:
@@ -108,7 +108,7 @@ failure:
 	mov rax, 1
 	mov rdi, 4
 	mov rsi, str_failure
-	mov rdx, [len_failure]
+	mov rdx, len_failure
 	syscall
 	ret
 url_ok:
@@ -124,7 +124,7 @@ comp_eos:
 open_file:
 	mov rax, 2
 	mov rdi, rsi
-	add edi, [len_prot_dom]
+	add rdi, len_prot_dom
 	mov rsi, 0
 	syscall
 	cmp rax, 0
@@ -133,14 +133,14 @@ success:
 	mov rdi, rax
 	mov rax, 0
 	mov rsi, buffer_resp
-	add esi, [len_success]
+	add rsi, len_success
 	mov rdx, 0x400
 	syscall		; write
 	mov rdx, rax
 	mov rax, 3
 	mov rdi, 5
 	syscall		; close
-	add rdx, [len_success]
+	add rdx, len_success
 	mov rax, 1
 	mov rdi, 4
 	mov rsi, buffer_resp
@@ -155,13 +155,26 @@ pid DD 0
 opt DD 0
 sockaddr DW 2,0xb822,0,0,0,0,0,0
 server_fd DQ 0
-str_url DB "gemini://localhost/files/",0
-len_prot_dom DQ 18 ; echo -n "gemini://localhost" | wc -c	>	18
-str_success DB "20 text/gemini",0xd,0x0a,0
-len_success DQ 16
-str_failure DB "30 gemini://localhost/files/index",0xd,0x0a,0
-len_failure DQ 35
+
+str_url:
+DB "gemini://"
+DB domain
+end_dom:
+DB filespath,0
+len_prot_dom equ end_dom - str_url
+
+str_success:
+DB "20 text/gemini",0xd,0x0a,0
+len_success equ $ - str_success
+
+str_failure:
+DB "30 gemini://"
+DB domain
+DB redirpath,0xd,0x0a,0
+len_failure equ $ - str_failure
 
 section .bss
 buffer_url: resb 0x500
-buffer_resp: resb 0x500
+buffer_resp:
+resb len_success
+resb pagelength

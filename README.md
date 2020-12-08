@@ -1,8 +1,8 @@
 # Geminiserver_server
 
-It is a verify simple gemini server written in x64 asm.
+It is a verify simple gemini server written in assembler (linux-amd64-nolibc-nasm).
 
-It doesn't handle TLS: we'll delegate this to openssl and socat. Therefore, you'll need to install socat. Pages are limited to 1024 bytes but it can be increased easily. The code is not optimized at all.
+It doesn't handle TLS: it is delegate to openssl and socat.
 
 Requirements:
 * socat
@@ -10,28 +10,38 @@ Requirements:
 
 ## Installation
 
-First of all, you'll need to edit the following var in the code:
-* str_url
-* str_failure
-* len_failure
+Export the following variable:
 
-len_failure is the length of str_failure. You can know it running (then add +1):
-```
-echo "30 gemini://{YourDomain}/files/index" | wc -c
-```
+* DOMAIN: your domain (eg. localhost)
+* FILES_PATH: the directory where the files will be, in the chroot (eg. /files/ )
+* REDIR_PATH: redirection path when a file is not found or an error occured (eg. /files/index )
+* PAGE_LENGTH: the maximum page length
 
+### Build
+
+Run `./make`
+
+or execute:
 ```
-nasm -f elf64 server.asm		# compile
+nasm -f elf64 server.asm -D "domain='$DOMAIN'" -D "filespath='$FILES_PATH'" -D "redirpath='$REDIR_PATH'"
 ld -o server server.o
-mkdir -p server_root/files		# create a directory to uploads your files
-echo "# Index" > server_root/files/index # Redirections go to this file
-cp server server_root/		# upload the compiled binary
-openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes -subj "/CN={YourDomain}"		# Generate self-signed certificate
-cp cert.perm cert		# Concatenate cert and key
-cat key.pem >> cert		# For socat
+```
+### Configuration
+
+As said above, socat handles TLS with openssl. Therefore, the certificate needs to be generated for it:
+```
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes -subj "/CN=${DOMAIN}"		# Generate self-signed certificate
+cp cert.perm cert   # Concatenate cert and key
+cat key.pem >> cert   # For socat
 ```
 
-To run, the server :
+Ensure to have a valid file to redirect to:
+```
+mkdir -p server_root/${FILES_PATH}
+echo "# Index" >> server_root/${REDIR_PATH}
+```
+
+## Run
 
 ```
 # chroot --userspec=nobody:nobody server_root /server &
