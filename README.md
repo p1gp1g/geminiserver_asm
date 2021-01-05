@@ -31,7 +31,7 @@ ld -o server server.o
 As said above, socat handles TLS with openssl. Therefore, the certificate needs to be generated for it:
 ```
 openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes -subj "/CN=${DOMAIN}"		# Generate self-signed certificate
-cp cert.perm cert   # Concatenate cert and key
+cp cert.pem cert   # Concatenate cert and key
 cat key.pem >> cert   # For socat
 ```
 
